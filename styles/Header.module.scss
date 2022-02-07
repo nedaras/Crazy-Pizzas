@@ -1,0 +1,16 @@
+@import './variables';
+
+.header {
+    display: flex;
+    justify-content: end;
+    gap: 1.4rem;
+    padding: 1rem;
+
+}
+
+.icon {
+    cursor: pointer;
+    font-size: 2em;
+    color: $theme-white;
+
+}
