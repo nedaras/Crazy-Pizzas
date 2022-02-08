@@ -7,7 +7,7 @@ const Home: NextPage = () => {
     return <>
         <Header />
         <div className={styles['main-content']} >
-            <h1>Welcome to <br /> Crazy Pizza's</h1>
+            <h1>Welcome to <br /> Crazy Pizzas</h1>
 
         </div>
 
