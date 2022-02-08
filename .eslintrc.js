@@ -14,6 +14,8 @@ module.exports = {
         '@typescript-eslint/no-non-null-assertion': 0,
         'prefer-const': 1,
         'array-bracket-spacing': [1, 'always'],
+        'no-async-promise-executor': 0,
+        '@typescript-eslint/ban-ts-comment': 0,
     },
     ignorePatterns: ['**/*.js'],
 }
