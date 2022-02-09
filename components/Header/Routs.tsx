@@ -18,7 +18,7 @@ const Icons: FC = () => {
 const Rout: FC<RoutProps> = ({ children, href }) => {
     return (
         <Link href={href}>
-            <motion.div className={styles.rout} initial={{ y: 1 }} whileHover={{ y: -5 }} exit={{ y: 1 }}>
+            <motion.div className={styles.rout} initial={{ y: 0 }} whileHover={{ y: -5 }} exit={{ y: 0 }}>
                 {children}
             </motion.div>
         </Link>

@@ -24,7 +24,7 @@ const Icons: FC = () => {
 const Icon: FC<IconProps> = ({ href, icon }) => {
     return (
         <Link href={href}>
-            <motion.div className={styles.icon} initial={{ y: 1 }} whileHover={{ y: -5 }} exit={{ y: 1 }}>
+            <motion.div className={styles.icon} initial={{ y: 0 }} whileHover={{ y: -5 }} exit={{ y: 0 }}>
                 <FontAwesomeIcon icon={icon} />
             </motion.div>
         </Link>
