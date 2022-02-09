@@ -1,26 +1,30 @@
-import { useAnchorWallet } from '@solana/wallet-adapter-react'
 import type { NextPage } from 'next'
 import { useCandyMachine } from '../hooks/useCandyMachine'
+import { useWallet } from '../hooks/useWallet'
 import { useWeb3 } from '../hooks/useWeb3'
-// TODO: make code cleaner, faster and NORE FUCKING READABLR :)
+// TODO: make code cleaner, faster and FUCKING READABLE :)
 import { getTransactionSignatureConfirmation, getCandyMachine, mint } from '../libs/candy-machine'
 
 const Home: NextPage = () => {
-    const wallet = useAnchorWallet()
-
     const [ candyMachineId, connection ] = useWeb3()
     const [ candyMachine, updateCandyMachine ] = useCandyMachine()
+    // TODO: make wallet variable in useWallet grabed from Web3Provider
+    const [ web3Walltet, connect ] = useWallet()
 
     async function mintNFT() {
-        // TODO: if wallet is undefined make a request for it
-        if (wallet) {
+        const wallet = web3Walltet || (await connect())
+
+        if (wallet && wallet.publicKey) {
             const candyMachine = await getCandyMachine(wallet, candyMachineId, connection)
             const id = await mint(candyMachine, wallet.publicKey)
             const status = id ? await getTransactionSignatureConfirmation(id, 15000, connection, 'singleGossip', true) : null
 
-            !status?.err && console.log('success')
-
-            updateCandyMachine()
+            if (!status?.err) {
+                console.log('success')
+                updateCandyMachine()
+            } else {
+                console.log(status.err)
+            }
         }
     }
 

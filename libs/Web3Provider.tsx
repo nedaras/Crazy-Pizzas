@@ -9,7 +9,7 @@ const Web3Provider: FC = ({ children }) => {
 
     return (
         <ConnectionProvider endpoint={endpoint}>
-            <WalletProvider wallets={wallets} autoConnect={true}>
+            <WalletProvider wallets={wallets}>
                 {children}
             </WalletProvider>
         </ConnectionProvider>
