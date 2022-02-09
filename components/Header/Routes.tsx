@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import Link from 'next/link'
+import 'bootstrap/dist/css/bootstrap.css'
 //import styles from '../../styles/Header.module.scss'
 import { motion } from 'framer-motion'
 

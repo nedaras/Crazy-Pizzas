@@ -4,6 +4,7 @@ import { PublicKey } from '@solana/web3.js'
 import type { NextPage } from 'next'
 import { useCandyMachine } from '../hooks/useCandyMachine'
 import { awaitTransactionSignatureConfirmation, getCandyMachineState, mint } from '../libs/candy-machine'
+import 'bootstrap/dist/css/bootstrap.css'
 
 // TODO: make this fields usable with web3 privider, context
 const connection = new web3.Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_HOST!)
