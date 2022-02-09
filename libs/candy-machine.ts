@@ -281,7 +281,7 @@ async function sendSignedTransaction({
         }
     })()
     try {
-        const confirmation = await awaitTransactionSignatureConfirmation(txid, timeout, connection, 'recent', true)
+        const confirmation = await getTransactionSignatureConfirmation(txid, timeout, connection, 'recent', true)
 
         if (!confirmation) throw new Error('Timed out awaiting confirmation on transaction')
 
@@ -387,7 +387,7 @@ async function getCandyMachineCreator(candyMachine: PublicKey): Promise<[PublicK
     return await PublicKey.findProgramAddress([ Buffer.from('candy_machine'), candyMachine.toBuffer() ], CANDY_MACHINE_PROGRAM)
 }
 
-export const getCandyMachineState = async (wallet: AnchorWallet, id: PublicKey, connection: Connection): Promise<CandyMachine> => {
+export const getCandyMachine = async (wallet: AnchorWallet, id: PublicKey, connection: Connection): Promise<CandyMachine> => {
     const provider = new Provider(connection, wallet, { preflightCommitment: 'recent' })
     const idl = await Program.fetchIdl(CANDY_MACHINE_PROGRAM, provider)
     const program = new Program(idl!, CANDY_MACHINE_PROGRAM, provider)
@@ -426,7 +426,7 @@ export const getCandyMachineState = async (wallet: AnchorWallet, id: PublicKey, 
     }
 }
 
-export async function awaitTransactionSignatureConfirmation(
+export async function getTransactionSignatureConfirmation(
     txid: TransactionSignature,
     timeout: number,
     connection: Connection,
