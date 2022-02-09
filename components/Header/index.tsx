@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import styles from '../../styles/Header.module.scss'
 import Icons from './Icons'
-import Routs from './Routs'
+import Routs from './Routes'
 
 const Header: FC = () => {
     return (
