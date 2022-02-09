@@ -15,7 +15,7 @@ export const useCandyMachine = (): [CandyMachine, () => void] => {
     const [ remaining, setRemaining ] = useState<number>()
 
     async function getCandyMachine(): Promise<[CandyMachineState, null] | [null, ErrorResponse]> {
-        const response = await getData<CandyMachineState>('http://localhost:3000/api/candy-machine/getState')
+        const response = await getData<CandyMachineState>(`${window.location.origin}/api/candy-machine/getState`)
         if (isResponseAnError(response)) return [ null, response ]
         return [ response, null ]
     }

@@ -8,7 +8,7 @@ import { getTransactionSignatureConfirmation, getCandyMachine, mint } from '../l
 const Home: NextPage = () => {
     const [ candyMachineId, connection ] = useWeb3()
     const [ candyMachine, updateCandyMachine ] = useCandyMachine()
-    // TODO: make wallet variable in useWallet grabed from Web3Provider
+
     const [ web3Wallte, connect ] = useWallet()
 
     async function mintNFT() {

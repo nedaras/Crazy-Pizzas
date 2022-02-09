@@ -15,7 +15,8 @@ module.exports = {
         'prefer-const': 1,
         'array-bracket-spacing': [1, 'always'],
         'no-async-promise-executor': 0,
-        '@typescript-eslint/ban-ts-comment': 0,
+        '@typescript-eslint/ban-ts-comment': 0, 
+        'react-hooks/exhaustive-deps': 0
     },
     ignorePatterns: ['**/*.js'],
 }

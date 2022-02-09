@@ -1,13 +1,13 @@
-import { getWalletAdapters } from '@solana/wallet-adapter-wallets'
-import { useMemo, useState } from 'react'
+import { useContext, useState } from 'react'
 import { Adapter } from '@solana/wallet-adapter-base/lib/esm/types'
+import { WalletContext } from '@solana/wallet-adapter-react'
 
 export const useWallet = (): [Adapter | null, () => Promise<Adapter | null>] => {
-    const wallets = useMemo(() => getWalletAdapters({ network: process.env.NEXT_PUBLIC_SOLANA_NETWORK as any }), [])
+    const wallets = useContext(WalletContext).wallets
     const [ wallet, setWallet ] = useState(getAdapter())
 
     function getAdapter(): Adapter | null {
-        for (const wallet of wallets) if (wallet.readyState == 'Installed') return wallet
+        for (const wallet of wallets) if (wallet.readyState == 'Installed') return wallet.adapter
         return null
     }
 

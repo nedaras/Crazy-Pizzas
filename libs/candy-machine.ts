@@ -387,7 +387,7 @@ async function getCandyMachineCreator(candyMachine: PublicKey): Promise<[PublicK
     return await PublicKey.findProgramAddress([ Buffer.from('candy_machine'), candyMachine.toBuffer() ], CANDY_MACHINE_PROGRAM)
 }
 
-export const getCandyMachine = async (wallet: Adapter, id: PublicKey, connection: Connection): Promise<CandyMachine> => {
+export const getCandyMachine = async (wallet: Adapter | PublicKey, id: PublicKey, connection: Connection): Promise<CandyMachine> => {
     const provider = new Provider(connection, wallet as any, { preflightCommitment: 'recent' })
     const idl = await Program.fetchIdl(CANDY_MACHINE_PROGRAM, provider)
     const program = new Program(idl!, CANDY_MACHINE_PROGRAM, provider)
