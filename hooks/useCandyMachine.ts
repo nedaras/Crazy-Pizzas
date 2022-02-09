@@ -9,7 +9,7 @@ interface CandyMachine {
     remaining: number | undefined
 }
 
-export const useCandyMachine = (): [CandyMachine | null, () => void] => {
+export const useCandyMachine = (): [CandyMachine, () => void] => {
     const [ available, setAvailable ] = useState<number>()
     const [ reddemed, setReddemed ] = useState<number>()
     const [ remaining, setRemaining ] = useState<number>()

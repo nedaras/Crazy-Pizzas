@@ -1,16 +1,13 @@
-import { web3 } from '@project-serum/anchor'
 import { useAnchorWallet } from '@solana/wallet-adapter-react'
-import { PublicKey } from '@solana/web3.js'
 import type { NextPage } from 'next'
 import { useCandyMachine } from '../hooks/useCandyMachine'
+import { useWeb3 } from '../hooks/useWeb3'
 import { awaitTransactionSignatureConfirmation, getCandyMachineState, mint } from '../libs/candy-machine'
-
-// TODO: make this fields usable with web3 privider, context
-const connection = new web3.Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_HOST!)
-const candyMachineId = new PublicKey(process.env.NEXT_PUBLIC_CANDY_MACHINE!)
 
 const Home: NextPage = () => {
     const wallet = useAnchorWallet()
+
+    const [ candyMachineId, connection ] = useWeb3()
     const [ candyMachine, updateCandyMachine ] = useCandyMachine()
 
     async function mintNFT() {
@@ -26,14 +23,14 @@ const Home: NextPage = () => {
         }
     }
 
-    return candyMachine ? (
+    return (
         <>
             <p>Total Available {candyMachine.available}</p>
             <p>Reddemed {candyMachine.reddemed}</p>
             <p>Remaining {candyMachine.remaining}</p>
             <button onClick={() => mintNFT()}>Mint</button>
         </>
-    ) : null
+    )
 }
 
 export default Home
