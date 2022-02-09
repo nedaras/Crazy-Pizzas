@@ -43,7 +43,7 @@ interface BlockhashAndFeeCalculator {
     feeCalculator: FeeCalculator
 }
 
-export const mint = async (candyMachine: CandyMachine, payer: PublicKey): Promise<(string | undefined)[]> => {
+export const mint = async (candyMachine: CandyMachine, payer: PublicKey): Promise<string | null> => {
     const mint = Keypair.generate()
 
     const userTokenAccountAddress = (await getAtaForMint(mint.publicKey, payer))[0]
@@ -149,10 +149,10 @@ export const mint = async (candyMachine: CandyMachine, payer: PublicKey): Promis
     try {
         return (await sendTransactions(candyMachine.program.provider.connection, candyMachine.program.provider.wallet, [ instructions, cleanupInsructions ], [ signers, [] ])).txs.map(
             (t) => t.txid
-        )
+        )[0]
     } catch (error) {
         console.error(error)
-        return []
+        return null
     }
 }
 
@@ -426,7 +426,7 @@ export const getCandyMachineState = async (wallet: AnchorWallet, id: PublicKey, 
     }
 }
 
-async function awaitTransactionSignatureConfirmation(
+export async function awaitTransactionSignatureConfirmation(
     txid: TransactionSignature,
     timeout: number,
     connection: Connection,

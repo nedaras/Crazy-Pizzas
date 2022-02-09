@@ -12,7 +12,6 @@
         "lint": "prettier --write . && eslint . --ext .tsx,.ts --fix"
     },
     "dependencies": {
-        "@civic/solana-gateway-react": "^0.4.12",
         "@fortawesome/fontawesome-svg-core": "^1.2.36",
         "@fortawesome/free-brands-svg-icons": "^5.15.4",
         "@fortawesome/free-solid-svg-icons": "^5.15.4",
