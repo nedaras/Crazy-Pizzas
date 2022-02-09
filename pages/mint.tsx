@@ -9,10 +9,10 @@ const Home: NextPage = () => {
     const [ candyMachineId, connection ] = useWeb3()
     const [ candyMachine, updateCandyMachine ] = useCandyMachine()
     // TODO: make wallet variable in useWallet grabed from Web3Provider
-    const [ web3Walltet, connect ] = useWallet()
+    const [ web3Wallte, connect ] = useWallet()
 
     async function mintNFT() {
-        const wallet = web3Walltet || (await connect())
+        const wallet = web3Wallte || (await connect())
 
         if (wallet && wallet.publicKey) {
             const candyMachine = await getCandyMachine(wallet, candyMachineId, connection)
