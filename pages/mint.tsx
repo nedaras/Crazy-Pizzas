@@ -12,18 +12,20 @@ const Home: NextPage = () => {
     const [ web3Wallte, connect ] = useWallet()
 
     async function mintNFT() {
-        const wallet = web3Wallte || (await connect())
+        const wallet = web3Wallte && web3Wallte.publicKey ?  web3Wallte : (await connect())
+
+        console.log(wallet)
 
         if (wallet && wallet.publicKey) {
             const candyMachine = await getCandyMachine(wallet, candyMachineId, connection)
             const id = await mint(candyMachine, wallet.publicKey)
             const status = id ? await getTransactionSignatureConfirmation(id, 15000, connection, 'singleGossip', true) : null
 
-            if (!status?.err) {
+            if (status && status.err) {
                 console.log('success')
                 updateCandyMachine()
             } else {
-                console.log(status.err)
+                status && console.log(status?.err)
             }
         }
     }
