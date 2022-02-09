@@ -1,3 +1,4 @@
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { useEffect, useState } from 'react'
 import { ErrorResponse } from '../@types'
 import { CandyMachineState } from '../@types/candy-machine'
@@ -7,12 +8,14 @@ interface CandyMachine {
     available: number | undefined
     reddemed: number | undefined
     remaining: number | undefined
+    price: number | undefined
 }
 
 export const useCandyMachine = (): [CandyMachine, () => void] => {
     const [ available, setAvailable ] = useState<number>()
     const [ reddemed, setReddemed ] = useState<number>()
     const [ remaining, setRemaining ] = useState<number>()
+    const [ price, setPrice ] = useState<number>()
 
     async function getCandyMachine(): Promise<[CandyMachineState, null] | [null, ErrorResponse]> {
         const response = await getData<CandyMachineState>(`${window.location.origin}/api/candy-machine/getState`)
@@ -27,6 +30,7 @@ export const useCandyMachine = (): [CandyMachine, () => void] => {
         setAvailable(candyMachine?.itemsAvailable)
         setReddemed(candyMachine?.itemsRedeemed)
         setRemaining(candyMachine?.itemsRemaining)
+        setPrice(candyMachine?.price / LAMPORTS_PER_SOL)
     }
 
     async function fakeUpdate() {
@@ -43,5 +47,5 @@ export const useCandyMachine = (): [CandyMachine, () => void] => {
         updateCandyMachine()
     }, [])
 
-    return [ { available, reddemed, remaining }, fakeUpdate ]
+    return [ { available, reddemed, remaining, price }, fakeUpdate ]
 }

@@ -35,6 +35,7 @@ const Home: NextPage = () => {
             <p>Total Available {candyMachine.available}</p>
             <p>Reddemed {candyMachine.reddemed}</p>
             <p>Remaining {candyMachine.remaining}</p>
+            <p>Price {candyMachine.price} SOL</p>
             <button onClick={() => mintNFT()}>Mint</button>
         </>
     )
