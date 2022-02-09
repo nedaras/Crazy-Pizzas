@@ -1,11 +1,11 @@
 import { FC } from 'react'
-import styles from '../../styles/Header.module.scss'
+//import styles from '../../styles/Header.module.scss'
 import Icons from './Icons'
 import Routs from './Routes'
 
 const Header: FC = () => {
     return (
-        <div className={styles.header}>
+        <div>
             <Routs />
             <Icons />
         </div>

@@ -2,7 +2,7 @@ import { FC } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTwitter, faInstagram, faDiscord } from '@fortawesome/free-brands-svg-icons'
 import Link from 'next/link'
-import styles from '../../styles/Header.module.scss'
+//import styles from '../../styles/Header.module.scss'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { motion } from 'framer-motion'
 
@@ -24,7 +24,7 @@ const Icons: FC = () => {
 const Icon: FC<IconProps> = ({ href, icon }) => {
     return (
         <Link href={href}>
-            <motion.div className={styles.icon} initial={{ y: 0 }} whileHover={{ y: -5 }} exit={{ y: 0 }}>
+            <motion.div initial={{ y: 0 }} whileHover={{ y: -5 }} exit={{ y: 0 }}>
                 <FontAwesomeIcon icon={icon} />
             </motion.div>
         </Link>
