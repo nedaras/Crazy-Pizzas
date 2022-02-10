@@ -1,11 +1,10 @@
 import { Program, Provider } from '@project-serum/anchor'
+import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Adapter } from '@solana/wallet-adapter-base/lib/esm/types'
 import {
-    Blockhash,
     Commitment,
     Connection,
-    FeeCalculator,
     Keypair,
     PublicKey,
     RpcResponseAndContext,
@@ -38,26 +37,18 @@ enum SequenceType {
     StopOnFailure,
 }
 
-interface BlockhashAndFeeCalculator {
-    blockhash: Blockhash
-    feeCalculator: FeeCalculator
-}
-
-export const mint = async (candyMachine: CandyMachine, payer: PublicKey): Promise<string | null> => {
+export const mint = async ({ state, program, id }: CandyMachine, payer: PublicKey): Promise<string | null> => {
     const mint = Keypair.generate()
 
-    const userTokenAccountAddress = (await getAtaForMint(mint.publicKey, payer))[0]
-    const userPayingAccountAddress = candyMachine.state.tokenMint ? (await getAtaForMint(candyMachine.state.tokenMint, payer))[0] : payer
+    const userTokenAccountAddress = await getAtaForMint(mint.publicKey, payer)
 
     const remainingAccounts: Accounts[] = []
-    const signers = [ mint ]
-    const cleanupInsructions = []
     const instructions = [
         SystemProgram.createAccount({
             fromPubkey: payer,
             newAccountPubkey: mint.publicKey,
             space: MintLayout.span,
-            lamports: await candyMachine.program.provider.connection.getMinimumBalanceForRentExemption(MintLayout.span),
+            lamports: await program.provider.connection.getMinimumBalanceForRentExemption(MintLayout.span),
             programId: TOKEN_PROGRAM_ID,
         }),
         Token.createInitMintInstruction(TOKEN_PROGRAM_ID, mint.publicKey, 0, payer, payer),
@@ -65,70 +56,18 @@ export const mint = async (candyMachine: CandyMachine, payer: PublicKey): Promis
         Token.createMintToInstruction(TOKEN_PROGRAM_ID, mint.publicKey, userTokenAccountAddress, payer, [], 1),
     ]
 
-    if (candyMachine.state.whitelistMintSettings) {
-        const mint = new PublicKey(candyMachine.state.whitelistMintSettings.mint)
-        const whitelistToken = (await getAtaForMint(mint, payer))[0]
-
-        remainingAccounts.push({
-            pubkey: whitelistToken,
-            isWritable: true,
-            isSigner: false,
-        })
-
-        if (candyMachine.state.whitelistMintSettings.mode.burnEveryTime) {
-            const whitelistBurnAuthority = Keypair.generate()
-
-            remainingAccounts.push({
-                pubkey: mint,
-                isWritable: true,
-                isSigner: false,
-            })
-            remainingAccounts.push({
-                pubkey: whitelistBurnAuthority.publicKey,
-                isWritable: false,
-                isSigner: true,
-            })
-            signers.push(whitelistBurnAuthority)
-            const exists = await candyMachine.program.provider.connection.getAccountInfo(whitelistToken)
-
-            if (exists) {
-                instructions.push(Token.createApproveInstruction(TOKEN_PROGRAM_ID, whitelistToken, whitelistBurnAuthority.publicKey, payer, [], 1))
-                cleanupInsructions.push(Token.createRevokeInstruction(TOKEN_PROGRAM_ID, whitelistToken, payer, []))
-            }
-        }
-    }
-
-    if (candyMachine.state.tokenMint) {
-        const transferAuthority = Keypair.generate()
-
-        signers.push(transferAuthority)
-        remainingAccounts.push({
-            pubkey: userPayingAccountAddress,
-            isWritable: true,
-            isSigner: false,
-        })
-        remainingAccounts.push({
-            pubkey: transferAuthority.publicKey,
-            isWritable: false,
-            isSigner: true,
-        })
-
-        instructions.push(Token.createApproveInstruction(TOKEN_PROGRAM_ID, userPayingAccountAddress, transferAuthority.publicKey, payer, [], candyMachine.state.price))
-        cleanupInsructions.push(Token.createRevokeInstruction(TOKEN_PROGRAM_ID, userPayingAccountAddress, payer, []))
-    }
-
     const metadataAddress = await getMetadata(mint.publicKey)
     const masterEdition = await getMasterEdition(mint.publicKey)
 
-    const [ candyMachineCreator, creatorBump ] = await getCandyMachineCreator(candyMachine.id)
+    const [ candyMachineCreator, creatorBump ] = await getCandyMachineCreator(id)
 
     instructions.push(
-        await candyMachine.program.instruction.mintNft(creatorBump, {
+        await program.instruction.mintNft(creatorBump, {
             accounts: {
-                candyMachine: candyMachine.id,
+                candyMachine: id,
                 candyMachineCreator,
-                payer: payer,
-                wallet: candyMachine.state.treasury,
+                payer,
+                wallet: state.treasury,
                 mint: mint.publicKey,
                 metadata: metadataAddress,
                 masterEdition,
@@ -147,9 +86,7 @@ export const mint = async (candyMachine: CandyMachine, payer: PublicKey): Promis
     )
 
     try {
-        return (await sendTransactions(candyMachine.program.provider.connection, candyMachine.program.provider.wallet, [ instructions, cleanupInsructions ], [ signers, [] ])).txs.map(
-            (t) => t.txid
-        )[0]
+        return (await sendTransactions(program.provider.connection, program.provider.wallet, [ instructions ], mint))[0].txid
     } catch (error) {
         console.error(error)
         return null
@@ -158,44 +95,22 @@ export const mint = async (candyMachine: CandyMachine, payer: PublicKey): Promis
 
 export const sendTransactions = async (
     connection: Connection,
-    wallet: any,
+    wallet: Wallet,
     instructionSet: TransactionInstruction[][],
-    signersSet: Keypair[][],
+    signer: Keypair,
     sequenceType: SequenceType = SequenceType.Parallel,
-    commitment: Commitment = 'singleGossip',
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    successCallback: (txid: string, ind: number) => void = () => {},
-    failCallback: (reason: string, ind: number) => boolean = () => false,
-    block?: BlockhashAndFeeCalculator
-): Promise<{ number: number; txs: { txid: string; slot: number }[] }> => {
-    if (!wallet.publicKey) throw new Error('wallet not connected')
+    commitment: Commitment = 'singleGossip'
+): Promise<{ txid: string; slot: number }[]> => {
 
     const unsignedTxns: Transaction[] = []
+    const block = await connection.getRecentBlockhash(commitment);
 
-    if (!block) {
-        block = await connection.getRecentBlockhash(commitment)
-    }
+    for (const instructions of instructionSet) {
 
-    for (let i = 0; i < instructionSet.length; i++) {
-        const instructions = instructionSet[i]
-        const signers = signersSet[i]
-
-        if (instructions.length === 0) {
-            continue
-        }
-
-        const transaction = new Transaction()
+        const transaction = new Transaction({ feePayer: wallet.publicKey })
         instructions.forEach((instruction) => transaction.add(instruction))
         transaction.recentBlockhash = block.blockhash
-        transaction.setSigners(
-            // fee payed by the wallet owner
-            wallet.publicKey,
-            ...signers.map((s) => s.publicKey)
-        )
-
-        if (signers.length > 0) {
-            transaction.partialSign(...signers)
-        }
+        transaction.partialSign(signer)
 
         unsignedTxns.push(transaction)
     }
@@ -205,37 +120,27 @@ export const sendTransactions = async (
     const pendingTxns: Promise<{ txid: string; slot: number }>[] = []
 
     const breakEarlyObject = { breakEarly: false, i: 0 }
-    console.log('Signed txns length', signedTxns.length, 'vs handed in length', instructionSet.length)
     for (let i = 0; i < signedTxns.length; i++) {
         const signedTxnPromise = sendSignedTransaction({
             connection,
             signedTransaction: signedTxns[i],
         })
 
-        signedTxnPromise
-            .then(({ txid }) => {
-                successCallback(txid, i)
-            })
-            .catch(() => {
-                failCallback(signedTxns[i], i)
-                if (sequenceType === SequenceType.StopOnFailure) {
-                    breakEarlyObject.breakEarly = true
-                    breakEarlyObject.i = i
-                }
-            })
+        signedTxnPromise.catch(() => {
+            if (sequenceType === SequenceType.StopOnFailure) {
+                breakEarlyObject.breakEarly = true
+                breakEarlyObject.i = i
+            }
+        })
 
         if (sequenceType !== SequenceType.Parallel) {
             try {
                 await signedTxnPromise
             } catch (e) {
-                console.log('Caught failure', e)
+                console.error('Caught failure', e)
                 if (breakEarlyObject.breakEarly) {
-                    console.log('Died on ', breakEarlyObject.i)
-                    // Return the txn we failed on by index
-                    return {
-                        number: breakEarlyObject.i,
-                        txs: await Promise.all(pendingTxns),
-                    }
+                    console.error('Died on ', breakEarlyObject.i)
+                    return Promise.all(pendingTxns)
                 }
             }
         } else {
@@ -247,7 +152,7 @@ export const sendTransactions = async (
         await Promise.all(pendingTxns)
     }
 
-    return { number: signedTxns.length, txs: await Promise.all(pendingTxns) }
+    return Promise.all(pendingTxns)
 }
 
 async function sendSignedTransaction({
@@ -269,7 +174,7 @@ async function sendSignedTransaction({
         skipPreflight: true,
     })
 
-    console.log('Started awaiting confirmation for', txid)
+    //console.log('Started awaiting confirmation for', txid)
 
     let done = false
     ;(async () => {
@@ -300,7 +205,7 @@ async function sendSignedTransaction({
         try {
             simulateResult = (await simulateTransaction(connection, signedTransaction, 'single')).value
         } catch (e) {
-            console.log(e)
+            console.error(e)
         }
         if (simulateResult && simulateResult.err) {
             if (simulateResult.logs) {
@@ -318,14 +223,14 @@ async function sendSignedTransaction({
         done = true
     }
 
-    console.log('Latency', txid, getUnixTs() - startTime)
+    //console.log('Latency', txid, getUnixTs() - startTime)
     return { txid, slot }
 }
 
 const getUnixTs = () => new Date().getTime() / 1000
 
-function getAtaForMint(mint: PublicKey, payer: PublicKey): Promise<[PublicKey, number]> {
-    return PublicKey.findProgramAddress([ payer.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer() ], SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID)
+async function getAtaForMint(mint: PublicKey, payer: PublicKey): Promise<PublicKey> {
+    return (await PublicKey.findProgramAddress([ payer.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer() ], SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID))[0]
 }
 
 function createAssociatedTokenAccountInstruction(associatedTokenAddress: PublicKey, payer: PublicKey, walletAddress: PublicKey, splTokenMintAddress: PublicKey) {
@@ -447,7 +352,7 @@ export async function getTransactionSignatureConfirmation(
                 return
             }
             done = true
-            console.log('Rejecting for timeout...')
+            console.error('Rejecting for timeout...')
             reject({ timeout: true })
         }, timeout)
         try {
@@ -461,10 +366,10 @@ export async function getTransactionSignatureConfirmation(
                         confirmations: 0,
                     }
                     if (result.err) {
-                        console.log('Rejected via websocket', result.err)
+                        console.error('Rejected via websocket', result.err)
                         reject(status)
                     } else {
-                        console.log('Resolved via websocket', result)
+                        //console.log('Resolved via websocket', result)
                         resolve(status)
                     }
                 },
@@ -481,23 +386,23 @@ export async function getTransactionSignatureConfirmation(
                     const signatureStatuses = await connection.getSignatureStatuses([ txid ])
                     status = signatureStatuses && signatureStatuses.value[0]
                     if (!done) {
-                        if (!status) {
-                            console.log('REST null result for', txid, status)
-                        } else if (status.err) {
-                            console.log('REST error for', txid, status)
+                        if (!status) return
+
+                        if (status.err) {
                             done = true
                             reject(status.err)
-                        } else if (!status.confirmations) {
-                            console.log('REST no confirmations for', txid, status)
-                        } else {
-                            console.log('REST confirmation for', txid, status)
+
+                        }
+                        
+                        if (status.confirmations) {
                             done = true
                             resolve(status)
+
                         }
                     }
                 } catch (e) {
                     if (!done) {
-                        console.log('REST connection error: txid', txid, e)
+                        console.error('REST connection error: txid', txid, e)
                     }
                 }
             })()
@@ -508,7 +413,7 @@ export async function getTransactionSignatureConfirmation(
     //@ts-ignore
     if (connection._signatureSubscriptions[subId]) connection.removeSignatureListener(subId)
     done = true
-    console.log('Returning status', status)
+    //console.log('Returning status', status)
     return status
 }
 

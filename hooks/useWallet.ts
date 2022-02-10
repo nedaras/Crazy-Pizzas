@@ -7,7 +7,12 @@ export const useWallet = (): [Adapter | null, () => Promise<Adapter | null>] => 
     const [ wallet, setWallet ] = useState(getAdapter())
 
     function getAdapter(): Adapter | null {
-        for (const wallet of wallets) if (wallet.readyState == 'Installed') return wallet.adapter
+        for (const wallet of wallets) { 
+            //console.log(wallet);
+            
+            if (wallet.readyState == 'Installed') return wallet.adapter
+
+        }
         return null
     }
 
