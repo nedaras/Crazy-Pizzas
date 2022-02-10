@@ -37,7 +37,7 @@ enum SequenceType {
     StopOnFailure,
 }
 
-export const mint = async ({ state, program, id }: CandyMachine, payer: PublicKey): Promise<string | null> => {
+export const mint = async ({ state, program, id }: CandyMachine, payer: PublicKey): Promise<[ string, null ] | [ null, string ]> => {
     const mint = Keypair.generate()
 
     const userTokenAccountAddress = await getAtaForMint(mint.publicKey, payer)
@@ -86,10 +86,13 @@ export const mint = async ({ state, program, id }: CandyMachine, payer: PublicKe
     )
 
     try {
-        return (await sendTransactions(program.provider.connection, program.provider.wallet, [ instructions ], mint))[0].txid
-    } catch (error) {
-        console.error(error)
-        return null
+
+        const transaction = await sendTransactions(program.provider.connection, program.provider.wallet, [ instructions ], mint)
+        return [ transaction[0].txid, null ]
+
+    } catch (error: any) {
+        return [ null, (error as Error).message ]
+
     }
 }
 

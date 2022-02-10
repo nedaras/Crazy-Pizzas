@@ -18,6 +18,7 @@ export const useWallet = (): [Adapter | null, () => Promise<Adapter | null>] => 
 
     async function connect() {
         const adapter = getAdapter()
+        if (wallet && wallet.publicKey) return wallet;
         if (!adapter) return null
 
         try {
