@@ -1,10 +1,17 @@
 import type { NextPage } from 'next'
-import { useState } from 'react'
+import { FC, MouseEventHandler, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { useCandyMachine } from '../hooks/useCandyMachine'
 import { useWallet } from '../hooks/useWallet'
 import { useWeb3 } from '../hooks/useWeb3'
 import { getTransactionSignatureConfirmation, getCandyMachine, mint } from '../libs/candy-machine'
+
+interface MintButtonProps {
+    onClick: MouseEventHandler<HTMLButtonElement>
+    minting: boolean
+    soldedOut: boolean
+
+}
 
 const Home: NextPage = () => {
     const [ candyMachineId, connection ] = useWeb3()
@@ -12,9 +19,11 @@ const Home: NextPage = () => {
     const [ minting, setMinting ] = useState(false)
 
     const [ , connect ] = useWallet()
+
+    console.log('bobas biski storas')
     
     async function mintNFT() {
-
+        // TODO: make code cleaner and implement toast.promise
         if (minting) return;
 
         setMinting(true)
@@ -59,9 +68,15 @@ const Home: NextPage = () => {
             <p>Reddemed {candyMachine.reddemed}</p>
             <p>Remaining {candyMachine.remaining}</p>
             <p>Price {candyMachine.price} SOL</p>
-            <button onClick={() => mintNFT()}>{ minting ? 'Minting...' : candyMachine.remaining == 0 ? 'Sold out' : 'Mint' }</button>
+            <MintButton onClick={mintNFT} minting={minting} soldedOut={candyMachine.remaining === 0}  />
         </>
     )
+}
+
+const MintButton:FC<MintButtonProps> = ({ onClick, minting, soldedOut }) => {
+    if (soldedOut) return <button className='btn btn-outline-primary disabled' >Soled Out</button>
+    return <button onClick={onClick} className='btn btn-outline-primary' >{ minting ? 'Minting your Pizza...' : 'Mint a Pizza' }</button>
+
 }
 
 export default Home

@@ -10,7 +10,7 @@ interface CandyMachine {
     remaining: number | undefined
     price: number | undefined
 }
-
+// TODO: use mint machine object not useStates it will be more dev friendly  and more efficante
 export const useCandyMachine = (): [CandyMachine, () => void] => {
     const [ available, setAvailable ] = useState<number>()
     const [ reddemed, setReddemed ] = useState<number>()
