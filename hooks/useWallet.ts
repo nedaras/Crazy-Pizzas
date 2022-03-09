@@ -7,18 +7,17 @@ export const useWallet = (): [Adapter | null, () => Promise<Adapter | null>] => 
     const [ wallet, setWallet ] = useState(getAdapter())
 
     function getAdapter(): Adapter | null {
-        for (const wallet of wallets) { 
+        for (const wallet of wallets) {
             //console.log(wallet);
-            
-            if (wallet.readyState == 'Installed') return wallet.adapter
 
+            if (wallet.readyState == 'Installed') return wallet.adapter
         }
         return null
     }
 
     async function connect() {
         const adapter = getAdapter()
-        if (wallet && wallet.publicKey) return wallet;
+        if (wallet && wallet.publicKey) return wallet
         if (!adapter) return null
 
         try {

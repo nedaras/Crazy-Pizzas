@@ -3,13 +3,10 @@ import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Adapter } from '@solana/wallet-adapter-base/lib/esm/types'
 import {
-    Commitment,
     Connection,
     Keypair,
     PublicKey,
-    RpcResponseAndContext,
     SignatureStatus,
-    SimulatedTransactionResponse,
     SystemProgram,
     SYSVAR_CLOCK_PUBKEY,
     SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -23,32 +20,19 @@ import { CandyMachine } from '../@types/candy-machine'
 
 const CANDY_MACHINE_PROGRAM = new PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ')
 const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL')
-const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
+export const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
 
-interface Accounts {
-    pubkey: PublicKey
-    isWritable: boolean
-    isSigner: boolean
-}
-
-enum SequenceType {
-    Sequential,
-    Parallel,
-    StopOnFailure,
-}
-
-export const mint = async ({ state, program, id }: CandyMachine, payer: PublicKey): Promise<[ string, null ] | [ null, string ]> => {
+const getTransactions = async (candyMachine: CandyMachine, payer: PublicKey): Promise<[Connection, Wallet, TransactionInstruction[][], Keypair]> => {
     const mint = Keypair.generate()
 
     const userTokenAccountAddress = await getAtaForMint(mint.publicKey, payer)
 
-    const remainingAccounts: Accounts[] = []
     const instructions = [
         SystemProgram.createAccount({
             fromPubkey: payer,
             newAccountPubkey: mint.publicKey,
             space: MintLayout.span,
-            lamports: await program.provider.connection.getMinimumBalanceForRentExemption(MintLayout.span),
+            lamports: await candyMachine.program.provider.connection.getMinimumBalanceForRentExemption(MintLayout.span),
             programId: TOKEN_PROGRAM_ID,
         }),
         Token.createInitMintInstruction(TOKEN_PROGRAM_ID, mint.publicKey, 0, payer, payer),
@@ -59,15 +43,15 @@ export const mint = async ({ state, program, id }: CandyMachine, payer: PublicKe
     const metadataAddress = await getMetadata(mint.publicKey)
     const masterEdition = await getMasterEdition(mint.publicKey)
 
-    const [ candyMachineCreator, creatorBump ] = await getCandyMachineCreator(id)
+    const [ candyMachineCreator, creatorBump ] = await getCandyMachineCreator(candyMachine.id)
 
     instructions.push(
-        await program.instruction.mintNft(creatorBump, {
+        await candyMachine.program.instruction.mintNft(creatorBump, {
             accounts: {
-                candyMachine: id,
+                candyMachine: candyMachine.id,
                 candyMachineCreator,
                 payer,
-                wallet: state.treasury,
+                wallet: candyMachine.state.treasury,
                 mint: mint.publicKey,
                 metadata: metadataAddress,
                 masterEdition,
@@ -81,35 +65,19 @@ export const mint = async ({ state, program, id }: CandyMachine, payer: PublicKe
                 recentBlockhashes: SYSVAR_RECENT_BLOCKHASHES_PUBKEY,
                 instructionSysvarAccount: SYSVAR_INSTRUCTIONS_PUBKEY,
             },
-            remainingAccounts: remainingAccounts.length > 0 ? remainingAccounts : undefined,
         })
     )
 
-    try {
-
-        const transaction = await sendTransactions(program.provider.connection, program.provider.wallet, [ instructions ], mint)
-        return [ transaction[0].txid, null ]
-
-    } catch (error: any) {
-        return [ null, (error as Error).message ]
-
-    }
+    return [ candyMachine.program.provider.connection, candyMachine.program.provider.wallet, [ instructions ], mint ]
 }
 
-export const sendTransactions = async (
-    connection: Connection,
-    wallet: Wallet,
-    instructionSet: TransactionInstruction[][],
-    signer: Keypair,
-    sequenceType: SequenceType = SequenceType.Parallel,
-    commitment: Commitment = 'singleGossip'
-): Promise<{ txid: string; slot: number }[]> => {
+export async function signTransactions(candyMachine: CandyMachine, payer: PublicKey): Promise<[string, null] | [null, [Connection, Transaction]]> {
+    const [ connection, wallet, instructionSet, signer ] = await getTransactions(candyMachine, payer)
 
     const unsignedTxns: Transaction[] = []
-    const block = await connection.getRecentBlockhash(commitment);
+    const block = await connection.getRecentBlockhash('singleGossip')
 
     for (const instructions of instructionSet) {
-
         const transaction = new Transaction({ feePayer: wallet.publicKey })
         instructions.forEach((instruction) => transaction.add(instruction))
         transaction.recentBlockhash = block.blockhash
@@ -118,119 +86,23 @@ export const sendTransactions = async (
         unsignedTxns.push(transaction)
     }
 
-    const signedTxns = await wallet.signAllTransactions(unsignedTxns)
+    const signedTxns = await wallet.signAllTransactions(unsignedTxns).catch((err: Error) => err.message)
 
-    const pendingTxns: Promise<{ txid: string; slot: number }>[] = []
-
-    const breakEarlyObject = { breakEarly: false, i: 0 }
-    for (let i = 0; i < signedTxns.length; i++) {
-        const signedTxnPromise = sendSignedTransaction({
-            connection,
-            signedTransaction: signedTxns[i],
-        })
-
-        signedTxnPromise.catch(() => {
-            if (sequenceType === SequenceType.StopOnFailure) {
-                breakEarlyObject.breakEarly = true
-                breakEarlyObject.i = i
-            }
-        })
-
-        if (sequenceType !== SequenceType.Parallel) {
-            try {
-                await signedTxnPromise
-            } catch (e) {
-                console.error('Caught failure', e)
-                if (breakEarlyObject.breakEarly) {
-                    console.error('Died on ', breakEarlyObject.i)
-                    return Promise.all(pendingTxns)
-                }
-            }
-        } else {
-            pendingTxns.push(signedTxnPromise)
-        }
-    }
-
-    if (sequenceType !== SequenceType.Parallel) {
-        await Promise.all(pendingTxns)
-    }
-
-    return Promise.all(pendingTxns)
+    if (typeof signedTxns == 'string') return [ signedTxns, null ]
+    return [ null, [ connection, signedTxns[0] ] ]
 }
 
-async function sendSignedTransaction({
-    signedTransaction,
-    connection,
-    timeout = 15000,
-}: {
-    signedTransaction: Transaction
-    connection: Connection
-    sendingMessage?: string
-    sentMessage?: string
-    successMessage?: string
-    timeout?: number
-}): Promise<{ txid: string; slot: number }> {
-    const rawTransaction = signedTransaction.serialize()
-    const startTime = getUnixTs()
-    let slot = 0
-    const txid: TransactionSignature = await connection.sendRawTransaction(rawTransaction, {
-        skipPreflight: true,
-    })
-
-    //console.log('Started awaiting confirmation for', txid)
-
-    let done = false
-    ;(async () => {
-        while (!done && getUnixTs() - startTime < timeout) {
-            connection.sendRawTransaction(rawTransaction, {
-                skipPreflight: true,
-            })
-            await new Promise((resolve) => setTimeout(() => resolve(null), 500))
-        }
-    })()
-    try {
-        const confirmation = await getTransactionSignatureConfirmation(txid, timeout, connection, 'recent', true)
-
-        if (!confirmation) throw new Error('Timed out awaiting confirmation on transaction')
-
-        if (confirmation.err) {
-            console.error(confirmation.err)
-            throw new Error('Transaction failed: Custom instruction error')
-        }
-
-        slot = confirmation?.slot || 0
-    } catch (err: any) {
-        console.error('Timeout Error caught', err)
-        if (err.timeout) {
-            throw new Error('Timed out awaiting confirmation on transaction')
-        }
-        let simulateResult: SimulatedTransactionResponse | null = null
+export const sendTransactions = (connection: Connection, transaction: Transaction) =>
+    new Promise(async (resolve, reject) => {
         try {
-            simulateResult = (await simulateTransaction(connection, signedTransaction, 'single')).value
-        } catch (e) {
-            console.error(e)
-        }
-        if (simulateResult && simulateResult.err) {
-            if (simulateResult.logs) {
-                for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
-                    const line = simulateResult.logs[i]
-                    if (line.startsWith('Program log: ')) {
-                        throw new Error('Transaction failed: ' + line.slice('Program log: '.length))
-                    }
-                }
-            }
-            throw new Error(JSON.stringify(simulateResult.err))
-        }
-        // throw new Error('Transaction failed');
-    } finally {
-        done = true
-    }
+            const signature = await connection.sendRawTransaction(transaction.serialize(), { skipPreflight: true })
+            const confirmation = await getTransactionSignatureConfirmation(signature, connection)
 
-    //console.log('Latency', txid, getUnixTs() - startTime)
-    return { txid, slot }
-}
-
-const getUnixTs = () => new Date().getTime() / 1000
+            confirmation.err ? reject(confirmation.err) : resolve(null)
+        } catch (error: any) {
+            reject(error)
+        }
+    })
 
 async function getAtaForMint(mint: PublicKey, payer: PublicKey): Promise<PublicKey> {
     return (await PublicKey.findProgramAddress([ payer.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer() ], SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID))[0]
@@ -281,20 +153,6 @@ function createAssociatedTokenAccountInstruction(associatedTokenAddress: PublicK
     })
 }
 
-async function getMetadata(mint: PublicKey): Promise<PublicKey> {
-    return (await PublicKey.findProgramAddress([ Buffer.from('metadata'), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer() ], TOKEN_METADATA_PROGRAM_ID))[0]
-}
-
-async function getMasterEdition(mint: PublicKey): Promise<PublicKey> {
-    return (
-        await PublicKey.findProgramAddress([ Buffer.from('metadata'), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer(), Buffer.from('edition') ], TOKEN_METADATA_PROGRAM_ID)
-    )[0]
-}
-
-async function getCandyMachineCreator(candyMachine: PublicKey): Promise<[PublicKey, number]> {
-    return await PublicKey.findProgramAddress([ Buffer.from('candy_machine'), candyMachine.toBuffer() ], CANDY_MACHINE_PROGRAM)
-}
-
 export const getCandyMachine = async (wallet: Adapter | PublicKey, id: PublicKey, connection: Connection): Promise<CandyMachine> => {
     const provider = new Provider(connection, wallet as any, { preflightCommitment: 'recent' })
     const idl = await Program.fetchIdl(CANDY_MACHINE_PROGRAM, provider)
@@ -334,110 +192,43 @@ export const getCandyMachine = async (wallet: Adapter | PublicKey, id: PublicKey
     }
 }
 
-export async function getTransactionSignatureConfirmation(
-    txid: TransactionSignature,
-    timeout: number,
-    connection: Connection,
-    commitment: Commitment = 'recent',
-    queryStatus = false
-): Promise<SignatureStatus | null | void> {
-    let done = false
-    let status: SignatureStatus | null | void = {
-        slot: 0,
-        confirmations: 0,
-        err: null,
-    }
-    let subId = 0
-
-    status = await new Promise(async (resolve, reject) => {
+function getTransactionSignatureConfirmation(signature: TransactionSignature, connection: Connection): Promise<SignatureStatus> {
+    return new Promise((resolve, reject) => {
         setTimeout(() => {
-            if (done) {
-                return
-            }
-            done = true
-            console.error('Rejecting for timeout...')
-            reject({ timeout: true })
-        }, timeout)
+            reject('timed out')
+        }, 5000)
+
         try {
-            subId = connection.onSignature(
-                txid,
-                (result, context) => {
-                    done = true
-                    status = {
-                        err: result.err,
-                        slot: context.slot,
-                        confirmations: 0,
+            connection.onSignature(
+                signature,
+                ({ err }, { slot }) => {
+                    console.log('viskas normaliai')
+
+                    if (err) {
+                        console.error('Rejected via websocket', err)
+                        return resolve({ err: 'rejected via websocket', slot, confirmations: 0 })
                     }
-                    if (result.err) {
-                        console.error('Rejected via websocket', result.err)
-                        reject(status)
-                    } else {
-                        //console.log('Resolved via websocket', result)
-                        resolve(status)
-                    }
+                    resolve({ err, slot, confirmations: 0 })
                 },
-                commitment
+                'recent'
             )
-        } catch (e) {
-            done = true
-            console.error('WS error in setup', txid, e)
-        }
-        while (!done && queryStatus) {
-            // eslint-disable-next-line no-loop-func
-            ;(async () => {
-                try {
-                    const signatureStatuses = await connection.getSignatureStatuses([ txid ])
-                    status = signatureStatuses && signatureStatuses.value[0]
-                    if (!done) {
-                        if (!status) return
-
-                        if (status.err) {
-                            done = true
-                            reject(status.err)
-
-                        }
-                        
-                        if (status.confirmations) {
-                            done = true
-                            resolve(status)
-
-                        }
-                    }
-                } catch (e) {
-                    if (!done) {
-                        console.error('REST connection error: txid', txid, e)
-                    }
-                }
-            })()
-            await new Promise((resolve) => setTimeout(() => resolve(null), 2000))
+        } catch (error) {
+            console.error('WS error in setup', signature, error)
+            reject('websockets failed to initialize')
         }
     })
-
-    //@ts-ignore
-    if (connection._signatureSubscriptions[subId]) connection.removeSignatureListener(subId)
-    done = true
-    //console.log('Returning status', status)
-    return status
 }
 
-async function simulateTransaction(connection: Connection, transaction: Transaction, commitment: Commitment): Promise<RpcResponseAndContext<SimulatedTransactionResponse>> {
-    // @ts-ignore
-    transaction.recentBlockhash = await connection._recentBlockhash(
-        // @ts-ignore
-        connection._disableBlockhashCaching
-    )
+async function getMetadata(mint: PublicKey): Promise<PublicKey> {
+    return (await PublicKey.findProgramAddress([ Buffer.from('metadata'), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer() ], TOKEN_METADATA_PROGRAM_ID))[0]
+}
 
-    const signData = transaction.serializeMessage()
-    // @ts-ignore
-    const wireTransaction = transaction._serialize(signData)
-    const encodedTransaction = wireTransaction.toString('base64')
-    const config: any = { encoding: 'base64', commitment }
-    const args = [ encodedTransaction, config ]
+async function getMasterEdition(mint: PublicKey): Promise<PublicKey> {
+    return (
+        await PublicKey.findProgramAddress([ Buffer.from('metadata'), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer(), Buffer.from('edition') ], TOKEN_METADATA_PROGRAM_ID)
+    )[0]
+}
 
-    // @ts-ignore
-    const res = await connection._rpcRequest('simulateTransaction', args)
-    if (res.error) {
-        throw new Error('failed to simulate transaction: ' + res.error.message)
-    }
-    return res.result
+async function getCandyMachineCreator(candyMachine: PublicKey): Promise<[PublicKey, number]> {
+    return await PublicKey.findProgramAddress([ Buffer.from('candy_machine'), candyMachine.toBuffer() ], CANDY_MACHINE_PROGRAM)
 }
