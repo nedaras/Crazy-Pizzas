@@ -1,6 +1,8 @@
 import type { NextPage } from 'next'
 import { FC, MouseEventHandler, useState } from 'react'
+import { Button } from 'react-bootstrap'
 import toast, { Toaster } from 'react-hot-toast'
+import Header from '../components/Header'
 import { useCandyMachine } from '../hooks/useCandyMachine'
 import { useWallet } from '../hooks/useWallet'
 import { useWeb3 } from '../hooks/useWeb3'
@@ -9,7 +11,7 @@ import { getCandyMachine, sendTransactions, signTransactions } from '../libs/can
 interface MintButtonProps {
     onClick: MouseEventHandler<HTMLButtonElement>
     minting: boolean
-    soldedOut: boolean
+    soledOut: boolean
 }
 
 const Home: NextPage = () => {
@@ -17,7 +19,7 @@ const Home: NextPage = () => {
     const [ candyMachine, updateCandyMachine ] = useCandyMachine()
     const [ minting, setMinting ] = useState(false)
 
-    const [ , connect ] = useWallet()
+    const connect = useWallet()
 
     async function mintNFT() {
         if (minting) return
@@ -51,22 +53,21 @@ const Home: NextPage = () => {
         <>
             <Toaster position="bottom-center" reverseOrder={false} />
 
+            <Header />
+
             <p>Total Available {candyMachine.available}</p>
-            <p>Reddemed {candyMachine.reddemed}</p>
+            <p>Redeemed {candyMachine.redeemed}</p>
             <p>Remaining {candyMachine.remaining}</p>
             <p>Price {candyMachine.price} SOL</p>
-            <MintButton onClick={mintNFT} minting={minting} soldedOut={false} />
+            <MintButton onClick={mintNFT} minting={minting} soledOut={candyMachine.remaining === 0} />
         </>
     )
 }
 
-const MintButton: FC<MintButtonProps> = ({ onClick, minting, soldedOut }) => {
-    if (soldedOut) return <button className="btn btn-outline-primary disabled">Soled Out</button>
-    return (
-        <button onClick={onClick} className="btn btn-outline-primary">
-            {minting ? 'Minting your Pizza...' : 'Mint a Pizza'}
-        </button>
-    )
-}
+const MintButton: FC<MintButtonProps> = ({ onClick, minting, soledOut }) => (
+    <Button onClick={onClick} disabled={soledOut || minting}>
+        {soledOut ? 'Soled Out' : minting ? 'Minting your Pizza...' : 'Mint a Pizza'}
+    </Button>
+)
 
 export default Home

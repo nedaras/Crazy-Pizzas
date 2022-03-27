@@ -2,16 +2,12 @@ import { useContext, useState } from 'react'
 import { Adapter } from '@solana/wallet-adapter-base/lib/esm/types'
 import { WalletContext } from '@solana/wallet-adapter-react'
 
-export const useWallet = (): [Adapter | null, () => Promise<Adapter | null>] => {
+export const useWallet = () => {
     const wallets = useContext(WalletContext).wallets
     const [ wallet, setWallet ] = useState(getAdapter())
 
     function getAdapter(): Adapter | null {
-        for (const wallet of wallets) {
-            //console.log(wallet);
-
-            if (wallet.readyState == 'Installed') return wallet.adapter
-        }
+        for (const wallet of wallets) if (wallet.readyState == 'Installed') return wallet.adapter
         return null
     }
 
@@ -30,5 +26,5 @@ export const useWallet = (): [Adapter | null, () => Promise<Adapter | null>] => 
         }
     }
 
-    return [ wallet, connect ]
+    return connect
 }

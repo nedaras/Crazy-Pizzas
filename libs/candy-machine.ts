@@ -194,10 +194,6 @@ export const getCandyMachine = async (wallet: Adapter | PublicKey, id: PublicKey
 
 function getTransactionSignatureConfirmation(signature: TransactionSignature, connection: Connection): Promise<SignatureStatus> {
     return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            reject('timed out')
-        }, 5000)
-
         try {
             connection.onSignature(
                 signature,

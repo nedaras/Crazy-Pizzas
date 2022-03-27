@@ -1,27 +1,16 @@
 import { FC } from 'react'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { Nav } from 'react-bootstrap'
 
 interface RoutProps {
     href: string
 }
 
 const Icons: FC = () => {
-    return (
-        <div>
-            <Rout href="/mint">Mint</Rout>
-        </div>
-    )
+    return <Rout href="/mint">Mint</Rout>
 }
 
 const Rout: FC<RoutProps> = ({ children, href }) => {
-    return (
-        <Link passHref={true} href={href}>
-            <motion.div initial={{ y: 0 }} whileHover={{ y: -5 }} exit={{ y: 0 }}>
-                {children}
-            </motion.div>
-        </Link>
-    )
+    return <Nav.Link href={href}>{children}</Nav.Link>
 }
 
 export default Icons

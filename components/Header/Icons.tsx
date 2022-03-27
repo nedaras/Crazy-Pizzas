@@ -1,9 +1,8 @@
 import { FC } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTwitter, faInstagram, faDiscord } from '@fortawesome/free-brands-svg-icons'
-import Link from 'next/link'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
-import { motion } from 'framer-motion'
+import { Dropdown } from 'react-bootstrap'
 
 interface IconProps {
     href: string
@@ -12,21 +11,25 @@ interface IconProps {
 
 const Icons: FC = () => {
     return (
-        <div>
-            <Icon href="https://twitter.com/CrazyPizzaNFT" icon={faTwitter} />
-            <Icon href="https://www.instagram.com/crazypizzanft/" icon={faInstagram} />
-            <Icon href="https://discord.gg/UmP8NnCQ" icon={faDiscord} />
-        </div>
+        <>
+            <Icon href="https://twitter.com/CrazyPizzaNFT" icon={faTwitter}>
+                Twitter
+            </Icon>
+            <Icon href="https://www.instagram.com/crazypizzanft/" icon={faInstagram}>
+                Instagram
+            </Icon>
+            <Icon href="https://discord.gg/UmP8NnCQ" icon={faDiscord}>
+                Discord
+            </Icon>
+        </>
     )
 }
 
-const Icon: FC<IconProps> = ({ href, icon }) => {
+const Icon: FC<IconProps> = ({ children, href, icon }) => {
     return (
-        <Link passHref={true} href={href}>
-            <motion.div initial={{ y: 0 }} whileHover={{ y: -5 }} exit={{ y: 0 }}>
-                <FontAwesomeIcon icon={icon} />
-            </motion.div>
-        </Link>
+        <Dropdown.Item href={href}>
+            <FontAwesomeIcon icon={icon} /> {children}
+        </Dropdown.Item>
     )
 }
 
