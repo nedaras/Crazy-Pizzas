@@ -5,7 +5,9 @@ import Web3Provider from '../libs/Web3Provider'
 function MyApp({ Component, pageProps }: AppProps) {
     return (
         <Web3Provider>
-            <Component {...pageProps} />
+            <div className='bg-white' >
+                <Component {...pageProps} />
+            </div>
         </Web3Provider>
     )
 }

@@ -5,6 +5,7 @@
         "type": "git",
         "url": "https://github.com/nedaras/Crazy-Pizzas.git"
     },
+    "license": "UNLICENSED",
     "scripts": {
         "dev": "next dev",
         "build": "next build",

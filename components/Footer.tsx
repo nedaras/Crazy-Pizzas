@@ -7,8 +7,8 @@ import { Button, Container, Stack } from 'react-bootstrap'
 const Footer: FC = () => {
     return (
         <footer className="bg-dark text-center text-white">
-            <Container className="pt-1">
-                <Stack className="justify-content-center my-1" direction="horizontal" gap={3}>
+            <Container className="p-1">
+                <Stack className="justify-content-center" direction="horizontal" gap={3}>
                     <Button variant="dark">
                         <Link passHref={true} href="https://twitter.com/CrazyPizzaNFT">
                             <FontAwesomeIcon icon={faTwitter} />
@@ -28,10 +28,6 @@ const Footer: FC = () => {
                     </Button>
                 </Stack>
             </Container>
-
-            <div className="text-center p-3" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
-                © 2020 Copyright
-            </div>
         </footer>
     )
 }

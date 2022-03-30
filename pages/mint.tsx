@@ -2,6 +2,7 @@ import type { NextPage } from 'next'
 import { FC, MouseEventHandler, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import toast, { Toaster } from 'react-hot-toast'
+import Footer from '../components/Footer'
 import Header from '../components/Header'
 import { useCandyMachine } from '../hooks/useCandyMachine'
 import { useWallet } from '../hooks/useWallet'
@@ -13,11 +14,11 @@ interface MintButtonProps {
     minting: boolean
     soledOut: boolean
 }
-
+// TODO: mobile support
 const Home: NextPage = () => {
-    const [ candyMachineId, connection ] = useWeb3()
-    const [ candyMachine, updateCandyMachine ] = useCandyMachine()
-    const [ minting, setMinting ] = useState(false)
+    const [candyMachineId, connection] = useWeb3()
+    const [candyMachine, updateCandyMachine] = useCandyMachine()
+    const [minting, setMinting] = useState(false)
 
     const connect = useWallet()
 
@@ -28,7 +29,7 @@ const Home: NextPage = () => {
 
         if (wallet) {
             const candyMachine = await getCandyMachine(wallet, candyMachineId, connection)
-            const [ cancelled, transaction ] = await signTransactions(candyMachine, wallet.publicKey!)
+            const [cancelled, transaction] = await signTransactions(candyMachine, wallet.publicKey!)
 
             if (!cancelled) {
                 setMinting(true)
@@ -60,6 +61,8 @@ const Home: NextPage = () => {
             <p>Remaining {candyMachine.remaining}</p>
             <p>Price {candyMachine.price} SOL</p>
             <MintButton onClick={mintNFT} minting={minting} soledOut={candyMachine.remaining === 0} />
+
+            <Footer />
         </>
     )
 }

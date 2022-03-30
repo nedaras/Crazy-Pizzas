@@ -1,1 +1,7 @@
 @import '../node_modules/bootstrap/scss/bootstrap';
+
+@each $key, $value in $grid-breakpoints {
+    .mw-#{$key} {
+        max-width: $value;
+    }
+}

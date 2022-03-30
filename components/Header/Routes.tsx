@@ -5,12 +5,17 @@ interface RoutProps {
     href: string
 }
 
-const Icons: FC = () => {
-    return <Rout href="/mint">Mint</Rout>
+const Routes: FC = () => {
+    return (
+        <>
+            <Rout href="/mint">Mint</Rout>
+            <Rout href="/mint">Roadmap</Rout>
+        </>
+    )
 }
 
 const Rout: FC<RoutProps> = ({ children, href }) => {
     return <Nav.Link href={href}>{children}</Nav.Link>
 }
 
-export default Icons
+export default Routes
