@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { FC } from 'react'
 import { Nav } from 'react-bootstrap'
 
@@ -15,7 +16,11 @@ const Routes: FC = () => {
 }
 
 const Rout: FC<RoutProps> = ({ children, href }) => {
-    return <Nav.Link href={href}>{children}</Nav.Link>
+    return (
+        <Link passHref href={href}>
+            <Nav.Link active={false}>{children}</Nav.Link>
+        </Link>
+    )
 }
 
 export default Routes

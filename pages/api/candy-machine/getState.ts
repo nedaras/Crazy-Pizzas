@@ -10,8 +10,6 @@ const candyMachineId = new PublicKey(process.env.NEXT_PUBLIC_CANDY_MACHINE!)
 const wallet = new PublicKey(process.env.WALLET!)
 
 export default async function handler(request: NextApiRequest, response: NextApiResponse<CandyMachineState | ErrorResponse>) {
-    if (request.method?.toUpperCase() !== 'GET') return response.status(404).json({ status: 400, message: 'only accepts "GET" requests' })
-
     const { state } = await getCandyMachine(wallet, candyMachineId, connection).catch(() => ({
         state: {
             status: 500,

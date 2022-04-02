@@ -1,15 +1,18 @@
-import { useContext, useState } from 'react'
-import { Adapter } from '@solana/wallet-adapter-base/lib/esm/types'
+import { useCallback, useContext, useState } from 'react'
+import { Adapter } from '@solana/wallet-adapter-base/lib/types'
 import { WalletContext } from '@solana/wallet-adapter-react'
 
-export const useWallet = () => {
-    const wallets = useContext(WalletContext).wallets
-    const [ wallet, setWallet ] = useState(getAdapter())
+export const useWallet = (): [ () => Promise<Adapter | null>, (wallet: Adapter) => void, number ] => {
 
-    function getAdapter(): Adapter | null {
+    const getAdapter = useCallback(() => {
+
         for (const wallet of wallets) if (wallet.readyState == 'Installed') return wallet.adapter
         return null
-    }
+
+    }, [])
+
+    const wallets = useContext(WalletContext).wallets
+    const [ wallet, setWallet ] = useState(getAdapter())
 
     async function connect() {
         const adapter = getAdapter()
@@ -26,5 +29,5 @@ export const useWallet = () => {
         }
     }
 
-    return connect
+    return [ connect, setWallet, 1 ]
 }

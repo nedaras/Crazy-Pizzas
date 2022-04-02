@@ -7,7 +7,7 @@ const timeOutError: ErrorResponse = {
 
 export const getData = <T extends Json = Json>(url: string, auth?: string): Promise<T | ErrorResponse> =>
     new Promise(async (resolve) => {
-        setTimeout(() => resolve(timeOutError), 3000)
+        setTimeout(() => resolve(timeOutError), 30000)
 
         const request = await fetch(url, {
             method: 'get',

@@ -1,13 +1,27 @@
-import type { NextPage } from 'next'
-import { Children, FC } from 'react'
-import { Col, Container, Row, Image, Card, Button, Carousel, ListGroup, ListGroupItem } from 'react-bootstrap'
+import type { GetServerSideProps, NextPage } from 'next'
+import Image from 'next/image'
+import { StaticImageData } from 'next/image'
+import { FC } from 'react'
+import { Col, Container, Row, Card, Button, Carousel, ListGroup, ListGroupItem } from 'react-bootstrap'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 
 import n15 from '../public/nfts/json/15.json'
 import n7 from '../public/nfts/json/7.json'
 import n58 from '../public/nfts/json/58.json'
-import { useCandyMachine } from '../hooks/useCandyMachine'
+import { CandyMachineState } from '../@types/candy-machine'
+import { getData } from '../libs/fetch-data'
+
+import nft7 from '../public/nfts/images/7.png'
+import nft15 from '../public/nfts/images/15.png'
+import nft58 from '../public/nfts/images/58.png'
+import nft95 from '../public/nfts/images/95.png'
+import Link from 'next/link'
+
+interface Props {
+    remaining: number
+    available: number
+}
 
 interface Layers {
     background: string
@@ -19,7 +33,7 @@ interface Layers {
 }
 
 interface PreviewProps {
-    img: string
+    img: StaticImageData
     layers: Layers
 }
 
@@ -32,9 +46,7 @@ interface FieldProps {
     title: string
 }
 
-const Home: NextPage = () => {
-    const [ candyMachine ] = useCandyMachine()
-
+const Home: NextPage<Props> = ({ remaining, available }) => {
     return (
         <>
             <Header />
@@ -46,15 +58,15 @@ const Home: NextPage = () => {
                     <Col md="6" className="">
                         <Card className="py-3 border-0">
                             <Card.Body className="text-center">
-                                <Card.Text>
-                                    <h2>
-                                        {candyMachine.remaining}/{candyMachine.available}
-                                    </h2>
-                                    <p className="text-muted lead list-unstyled mt-2">MINTED</p>
-                                </Card.Text>
-                                <Button href="/mint" className="w-75 px-5 mt-3 text-light" variant="info" size="lg">
-                                    GO TO MINT
-                                </Button>
+                                <h2>
+                                    {remaining}/{available}
+                                </h2>
+                                <p className="text-muted lead list-unstyled mt-2">MINTED</p>
+                                <Link passHref href="/mint">
+                                    <Button className="w-75 px-5 mt-3 text-light" variant="info" size="lg">
+                                        GO TO MINT
+                                    </Button>
+                                </Link>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -63,9 +75,9 @@ const Home: NextPage = () => {
                 <Content />
                 <hr className="my-5" />
                 <Row className="justify-content-center g-3" xs="auto" md={{ cols: 2 }} lg={{ cols: 3 }}>
-                    <Preview img="15" layers={n15} />
-                    <Preview img="7" layers={n7} />
-                    <Preview img="58" layers={n58} />
+                    <Preview img={nft7} layers={n15} />
+                    <Preview img={nft15} layers={n7} />
+                    <Preview img={nft58} layers={n58} />
                 </Row>
             </Container>
 
@@ -74,26 +86,32 @@ const Home: NextPage = () => {
     )
 }
 
+export const getServerSideProps: GetServerSideProps = async () => {
+    const candyMachine = (await getData<CandyMachineState>(`http://localhost:3000/api/candy-machine/getState`)) as CandyMachineState
 
+    return {
+        props: { remaining: candyMachine.itemsRemaining, available: candyMachine.itemsAvailable },
+    }
+}
 
 const SlideShow: FC = () => (
-    <Carousel variant='dark' >
+    <Carousel variant="dark">
         <Carousel.Item>
-            <Image src="/nfts/images/95.png" alt="First slide" fluid />
+            <Image src={nft95} alt="Slide" />
         </Carousel.Item>
 
         <Carousel.Item>
-            <Image src="/nfts/images/95.png" alt="First slide" fluid />
+            <Image src={nft95} alt="Slide" />
         </Carousel.Item>
         <Carousel.Item>
-            <Image src="/nfts/images/95.png" alt="First slide" fluid />
+            <Image src={nft95} alt="Slide" />
         </Carousel.Item>
 
         <Carousel.Item>
-            <Image src="/nfts/images/95.png" alt="First slide" fluid />
+            <Image src={nft95} alt="Slide" />
         </Carousel.Item>
         <Carousel.Item>
-            <Image src="/nfts/images/95.png" alt="First slide" fluid />
+            <Image src={nft95} alt="Slide" />
         </Carousel.Item>
     </Carousel>
 )
@@ -101,7 +119,7 @@ const SlideShow: FC = () => (
 const Preview: FC<PreviewProps> = ({ img, layers }) => (
     <Col>
         <Card className="shadow-sm">
-            <Card.Img src={`/nfts/images/${img}.png`} />
+            <Image className="card-img" src={img} alt="NFT" />
             <Card.Body>
                 <Card.Title className="ms-1">Ingredients</Card.Title>
                 <ListGroup>

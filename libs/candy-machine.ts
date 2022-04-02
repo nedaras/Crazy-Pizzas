@@ -1,10 +1,12 @@
 import { Program, Provider } from '@project-serum/anchor'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Adapter } from '@solana/wallet-adapter-base/lib/esm/types'
+import { Adapter } from '@solana/wallet-adapter-base/lib/types'
+
 import {
     Connection,
     Keypair,
+    LAMPORTS_PER_SOL,
     PublicKey,
     SignatureStatus,
     SystemProgram,
@@ -164,7 +166,7 @@ export const getCandyMachine = async (wallet: Adapter | PublicKey, id: PublicKey
     const itemsRedeemed = _itemsRedeemed.toNumber()
     const itemsRemaining = itemsAvailable - itemsRedeemed
 
-    const time = new Date().getTime() / 1000
+    const time = Date.now() / 1000
 
     return {
         id,
@@ -187,7 +189,7 @@ export const getCandyMachine = async (wallet: Adapter | PublicKey, id: PublicKey
             endSettings: data.endSettings,
             whitelistMintSettings: data.whitelistMintSettings,
             hiddenSettings: data.hiddenSettings,
-            price: data.price.toNumber(),
+            price: data.price.toNumber() / LAMPORTS_PER_SOL,
         },
     }
 }
@@ -198,8 +200,6 @@ function getTransactionSignatureConfirmation(signature: TransactionSignature, co
             connection.onSignature(
                 signature,
                 ({ err }, { slot }) => {
-                    console.log('viskas normaliai')
-
                     if (err) {
                         console.error('Rejected via websocket', err)
                         return resolve({ err: 'rejected via websocket', slot, confirmations: 0 })
