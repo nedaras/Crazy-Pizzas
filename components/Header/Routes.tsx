@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { FC } from 'react'
 import { Nav } from 'react-bootstrap'
 
@@ -9,16 +10,18 @@ interface RoutProps {
 const Routes: FC = () => {
     return (
         <>
+            <Rout href="/">Home</Rout>
             <Rout href="/mint">Mint</Rout>
-            <Rout href="/mint">Roadmap</Rout>
         </>
     )
 }
 
 const Rout: FC<RoutProps> = ({ children, href }) => {
+    const router = useRouter()
+
     return (
-        <Link passHref href={href}>
-            <Nav.Link active={false}>{children}</Nav.Link>
+        <Link href={href} passHref>
+            <Nav.Link active={router.pathname == href}>{children}</Nav.Link>
         </Link>
     )
 }

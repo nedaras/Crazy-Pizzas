@@ -3,8 +3,6 @@ import Image from 'next/image'
 import { StaticImageData } from 'next/image'
 import { FC } from 'react'
 import { Col, Container, Row, Card, Button, Carousel, ListGroup, ListGroupItem } from 'react-bootstrap'
-import Footer from '../components/Footer'
-import Header from '../components/Header'
 
 import n15 from '../public/nfts/json/15.json'
 import n7 from '../public/nfts/json/7.json'
@@ -49,7 +47,6 @@ interface FieldProps {
 const Home: NextPage<Props> = ({ remaining, available }) => {
     return (
         <>
-            <Header />
             <Container className="mw-xl mb-5">
                 <Row className="align-items-center">
                     <Col md="6">
@@ -80,8 +77,6 @@ const Home: NextPage<Props> = ({ remaining, available }) => {
                     <Preview img={nft58} layers={n58} />
                 </Row>
             </Container>
-
-            <Footer />
         </>
     )
 }
