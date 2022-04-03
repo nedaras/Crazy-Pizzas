@@ -60,6 +60,7 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
                         .then(() => {
                             setItemsRedeemed(itemsRedeemed + 1)
                             setItemsRemaining(itemsRemaining - 1)
+                            setMinting(false)
                         })
                         .catch(() => {
                             setMinting(false)
