@@ -1,6 +1,6 @@
 import { Wallet, WalletContext } from '@solana/wallet-adapter-react'
 import { FC, useContext, useMemo } from 'react'
-import { Button, Modal, Stack } from 'react-bootstrap'
+import { Button, Modal, Stack, ButtonGroup, Badge } from 'react-bootstrap'
 import Image from 'next/image'
 import { Adapter } from '@solana/wallet-adapter-base/lib/types'
 
@@ -37,7 +37,7 @@ const WalletAdapter: FC<Props> = ({ show, onClose, onSelect, select }) => {
             </Modal.Body>
 
             <Modal.Footer className="justify-content-center">
-                <Button variant="secondary" className="w-75" onClick={() => onClose()}>
+                <Button variant="secondary" className="w-100" onClick={() => onClose()}>
                     Got it
                 </Button>
             </Modal.Footer>
@@ -46,15 +46,19 @@ const WalletAdapter: FC<Props> = ({ show, onClose, onSelect, select }) => {
 }
 
 const Wallets: FC<WalletProps> = ({ wallets, onSelect, select }) => (
-    <Stack>
+    <ButtonGroup className="w-100" vertical>
         {wallets.map(({ adapter }, index) => (
-            <Stack onClick={() => onSelect(adapter)} key={index} direction="horizontal" gap={3}>
-                <Image width="34" height="34" alt="Wallet" src={adapter.icon} />
-                <div>{adapter.name}</div>
-                <div className="ms-auto">{ select ? 'Detected' : 'Download' }</div>
-            </Stack>
+            <Button variant="dark" key={index} href={select ? undefined : adapter.url}>
+                <Stack onClick={select ? () => onSelect(adapter) : undefined} direction="horizontal" gap={3}>
+                    <Image width="34" height="34" alt="Wallet" src={adapter.icon} />
+                    <div>{adapter.name}</div>
+                    <Badge className="ms-auto" bg="secondary">
+                        {select ? 'Detected' : 'Download'}
+                    </Badge>
+                </Stack>
+            </Button>
         ))}
-    </Stack>
+    </ButtonGroup>
 )
 
 export default WalletAdapter

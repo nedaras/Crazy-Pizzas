@@ -15,6 +15,7 @@ import nft15 from '../public/nfts/images/15.png'
 import nft58 from '../public/nfts/images/58.png'
 import nft95 from '../public/nfts/images/95.png'
 import Link from 'next/link'
+import Mint from '../components/Mint'
 
 interface Props {
     remaining: number
@@ -48,26 +49,9 @@ const Home: NextPage<Props> = ({ remaining, available }) => {
     return (
         <>
             <Container className="mw-xl mb-5">
-                <Row className="align-items-center">
-                    <Col md="6">
-                        <SlideShow />
-                    </Col>
-                    <Col md="6" className="">
-                        <Card className="py-3 border-0">
-                            <Card.Body className="text-center">
-                                <h2>
-                                    {remaining}/{available}
-                                </h2>
-                                <p className="text-muted lead list-unstyled mt-2">MINTED</p>
-                                <Link passHref href="/mint">
-                                    <Button className="w-75 px-5 mt-3 text-light" variant="info" size="lg">
-                                        GO TO MINT
-                                    </Button>
-                                </Link>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
+                <Mint remaining={remaining} available={available} button={<MintButton />}>
+                    <SlideShow />
+                </Mint>
                 <hr className="mb-5" />
                 <Content />
                 <hr className="my-5" />
@@ -81,8 +65,18 @@ const Home: NextPage<Props> = ({ remaining, available }) => {
     )
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
-    const candyMachine = (await getData<CandyMachineState>(`http://localhost:3000/api/candy-machine/getState`)) as CandyMachineState
+const MintButton: FC = () => {
+    return (
+        <Link passHref href="/mint">
+            <Button className="w-75 px-5 mt-3 text-light" variant="info" size="lg">
+                GO TO MINT
+            </Button>
+        </Link>
+    )
+}
+
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+    const candyMachine = (await getData<CandyMachineState>(`http://${req.headers.host}/api/candy-machine/getState`)) as CandyMachineState
 
     return {
         props: { remaining: candyMachine.itemsRemaining, available: candyMachine.itemsAvailable },

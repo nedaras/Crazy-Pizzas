@@ -3,11 +3,15 @@ import { FC, MouseEventHandler, useState } from 'react'
 import { Button, Container } from 'react-bootstrap'
 import toast, { Toaster } from 'react-hot-toast'
 import { CandyMachineState } from '../@types/candy-machine'
-import WalletAdapter from '../components/WalletAdapter'
+
 import { useWallet } from '../hooks/useWallet'
 import { useWeb3 } from '../hooks/useWeb3'
 import { getData } from '../libs/fetch-data'
 import { Adapter } from '@solana/wallet-adapter-base/lib/types'
+import dynamic from 'next/dynamic'
+import Mint from '../components/Mint'
+
+const WalletAdapter = dynamic(() => import('../components/WalletAdapter'))
 
 interface Props {
     remaining: number
@@ -21,7 +25,7 @@ interface MintButtonProps {
     minting: boolean
     soledOut: boolean
 }
-// TODO: mobile support
+
 const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
     const [ getWallet, detected ] = useWallet()
     const [ selectedWallet, setSelectedWallet ] = useState<string | null>(detected.length == 1 ? detected[0].name : null)
@@ -49,8 +53,8 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
 
             if (wallet) {
                 const { getCandyMachine, sendTransactions, signTransactions } = await import('../libs/candy-machine')
-
                 const candyMachine = await getCandyMachine(wallet, candyMachineId, connection)
+
                 const [ cancelled, transaction ] = await signTransactions(candyMachine, wallet.publicKey!)
 
                 if (!cancelled) {
@@ -87,18 +91,27 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
             <WalletAdapter select={detected.length > 0} show={showWalletAdapter} onClose={() => setShowWalletAdapter(false)} onSelect={handleSelect} />
 
             <Container className="mw-xl">
+                <Mint remaining={itemsRemaining} available={available} button={<MintButton onClick={mintNFT} minting={minting} soledOut={itemsRemaining === 0} />} >
                 <p>Total Available {available}</p>
                 <p>Redeemed {itemsRedeemed}</p>
                 <p>Remaining {itemsRemaining}</p>
                 <p>Price {price} SOL</p>
-                <MintButton onClick={mintNFT} minting={minting} soledOut={itemsRemaining === 0} />
+                </Mint>
             </Container>
         </>
     )
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
-    const candyMachine = (await getData<CandyMachineState>(`http://localhost:3000/api/candy-machine/getState`)) as CandyMachineState
+const MintButton: FC<MintButtonProps> = ({ onClick, minting, soledOut }) => {
+    return (
+        <Button className="w-75 px-5 mt-3 text-light" variant="info" size="lg" onClick={onClick} disabled={soledOut || minting} >
+            {soledOut ? 'Soled Out' : minting ? 'Minting your Pizza...' : 'Mint a Pizza'}
+        </Button>
+    )
+}
+
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+    const candyMachine = (await getData<CandyMachineState>(`http://${req.headers.host}/api/candy-machine/getState`)) as CandyMachineState
 
     return {
         props: {
@@ -109,11 +122,5 @@ export const getServerSideProps: GetServerSideProps = async () => {
         },
     }
 }
-
-const MintButton: FC<MintButtonProps> = ({ onClick, minting, soledOut }) => (
-    <Button className="px-5 text-light" variant="info" onClick={onClick} disabled={soledOut || minting}>
-        {soledOut ? 'Soled Out' : minting ? 'Minting your Pizza...' : 'Mint a Pizza'}
-    </Button>
-)
 
 export default Home

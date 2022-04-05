@@ -8,6 +8,11 @@ body {
     background: $dark;
 }
 
+.wrapper {
+    min-height: 100vh;
+
+}
+
 strong {
     color: $dark;
 }

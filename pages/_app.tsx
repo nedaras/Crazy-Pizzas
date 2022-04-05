@@ -9,7 +9,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     return (
         <Web3Provider>
             <SSRProvider>
-                <div className="bg-white">
+                <div className="bg-white wrapper">
                     <Header />
                     <Component {...pageProps} />
                     <Footer />
