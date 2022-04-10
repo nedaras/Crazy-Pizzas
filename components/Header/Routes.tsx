@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { FC } from 'react'
-import { Nav } from 'react-bootstrap'
+import type { FC } from 'react'
+import Nav from 'react-bootstrap/Nav'
 
 interface RoutProps {
     href: string
@@ -10,8 +10,7 @@ interface RoutProps {
 const Routes: FC = () => {
     return (
         <>
-            <Rout href="/">Home</Rout>
-            <Rout href="/mint">Mint</Rout>
+            <Rout href="/404">Something</Rout>
         </>
     )
 }

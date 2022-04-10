@@ -1,6 +1,10 @@
 import { Wallet, WalletContext } from '@solana/wallet-adapter-react'
 import { FC, useContext, useMemo } from 'react'
-import { Button, Modal, Stack, ButtonGroup, Badge } from 'react-bootstrap'
+import Button from 'react-bootstrap/Button'
+import Modal from 'react-bootstrap/Modal'
+import Stack from 'react-bootstrap/Stack'
+import ButtonGroup from 'react-bootstrap/ButtonGroup'
+import Badge from 'react-bootstrap/Badge'
 import Image from 'next/image'
 import { Adapter } from '@solana/wallet-adapter-base/lib/types'
 

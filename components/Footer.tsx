@@ -1,7 +1,11 @@
-import { faDiscord, faInstagram, faTwitter } from '@fortawesome/free-brands-svg-icons'
+import faTwitter from '@fortawesome/free-brands-svg-icons/faTwitter'
+import faInstagram from '@fortawesome/free-brands-svg-icons/faInstagram'
+import faDiscord from '@fortawesome/free-brands-svg-icons/faDiscord'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { FC } from 'react'
-import { Button, Container, Stack } from 'react-bootstrap'
+import type { FC } from 'react'
+import Button from 'react-bootstrap/Button'
+import Container from 'react-bootstrap/Container'
+import Stack from 'react-bootstrap/Stack'
 
 const Footer: FC = () => {
     return (
