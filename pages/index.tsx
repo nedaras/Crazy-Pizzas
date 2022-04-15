@@ -105,7 +105,7 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
                 <Content>
                     <Field title="About The Pizzas">
                         <li>
-                            One pizzas price is <strong>0.8 SOL</strong>.
+                            One pizzas price is <strong>{price} SOL</strong>.
                         </li>
                         <li>
                             First <strong>222</strong> to mint get Pizza for <strong>Free</strong>.
@@ -113,7 +113,7 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
                     </Field>
                     <Field title="Notice">
                         <li>
-                            One pizzas price is <strong>0.8 SOL</strong>.
+                            One pizzas price is <strong>{price} SOL</strong>.
                         </li>
                         <li>
                             First <strong>222</strong> to mint get Pizza for <strong>Free</strong>.
@@ -121,7 +121,7 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
                     </Field>
                     <Field title="Something">
                         <li>
-                            One pizzas price is <strong>0.8 SOL</strong>.
+                            One pizzas price is <strong>{price} SOL</strong>.
                         </li>
                         <li>
                             First <strong>222</strong> to mint get Pizza for <strong>Free</strong>.
@@ -129,7 +129,7 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
                     </Field>
                     <Field title="Whats Next?">
                         <li>
-                            One pizzas price is <strong>0.8 SOL</strong>.
+                            One pizzas price is <strong>{price} SOL</strong>.
                         </li>
                         <li>
                             First <strong>222</strong> to mint get Pizza for <strong>Free</strong>.
@@ -148,7 +148,12 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const candyMachine = (await getData<CandyMachineState>(`http://${req.headers.host}/api/candy-machine/getState`)) as CandyMachineState
+    const candyMachine = await getData<CandyMachineState>(`http://${req.headers.host}/api/candy-machine/getState`).catch(() => ({
+        itemsRemaining: 0,
+        itemsAvailable: 0,
+        itemsRedeemed: 0,
+        price: 0,
+    }))
 
     return {
         props: {

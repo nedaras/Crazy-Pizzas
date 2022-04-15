@@ -1,39 +1,35 @@
 import type { ErrorResponse, Json } from '../@types'
 
 const timeOutError: ErrorResponse = {
-    status: 500,
-    message: 'timed out',
+    error: 'Request timed out',
 }
 
-export const getData = <T extends Json = Json>(url: string, auth?: string): Promise<T | ErrorResponse> =>
-    new Promise(async (resolve) => {
-        setTimeout(() => resolve(timeOutError), 30000)
+export const getData = <T extends Json = Json>(url: string, auth?: string): Promise<T> =>
+    new Promise(async (resolve, reject) => {
+        setTimeout(() => reject(timeOutError), 30000)
 
         const request = await fetch(url, {
-            method: 'get',
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
                 ...(auth ? { Authorization: auth } : {}),
             },
         })
-        resolve(request.json())
+        request.ok ? resolve(request.json()) : reject(request.json())
     })
 
-export const postData = <T extends Json = Json>(url: string, data: Json): Promise<T | ErrorResponse> =>
-    new Promise(async (resolve) => {
-        setTimeout(() => resolve(timeOutError), 3000)
+export const postData = <T extends Json = Json>(url: string, data: Json): Promise<T> =>
+    new Promise(async (resolve, reject) => {
+        setTimeout(() => reject(timeOutError), 30000)
 
         const request = await fetch(url, {
-            method: 'post',
+            method: 'POST',
             body: JSON.stringify(data),
             headers: {
                 'Content-Type': `application/json`,
                 Accept: 'application/json',
             },
         })
-
-        resolve(request.json())
+        request.ok ? resolve(request.json()) : reject(request.json())
     })
-
-export const isResponseAnError = (object: Json | ErrorResponse): object is ErrorResponse => (object as ErrorResponse).status != null

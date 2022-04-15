@@ -123,6 +123,14 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
+"@js-temporal/polyfill@^0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@js-temporal/polyfill/-/polyfill-0.4.1.tgz#efca927fe7eb92f71bee1486c160ddf7f9c6723c"
+  integrity sha512-q45ecIocpa2TLem2jNOsCrDwP/sgKZdSkt+C1Rx07OkdKsdbvVfHcD1iDiK9scxBZrBQ38uJ8VQISXBS70ql1w==
+  dependencies:
+    jsbi "^4.1.0"
+    tslib "^2.3.1"
+
 "@json-rpc-tools/provider@^1.5.5":
   version "1.7.6"
   resolved "https://registry.yarnpkg.com/@json-rpc-tools/provider/-/provider-1.7.6.tgz#8a17c34c493fa892632e278fd9331104e8491ec6"
@@ -2364,6 +2372,11 @@ js-yaml@^4.1.0:
   integrity sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==
   dependencies:
     argparse "^2.0.1"
+
+jsbi@^4.1.0:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/jsbi/-/jsbi-4.2.1.tgz#85d27090e0e123c4189ed242a860e0600736cf0e"
+  integrity sha512-YQ9iOZLiRiygDfzpbG8fdovDsjacbUWq/53nnQX9tgIKueMi6sk2Bhs8ZvZ0peV3tG+b7gqixUCYeVJpdownaA==
 
 json-rpc-random-id@^1.0.1:
   version "1.0.1"
