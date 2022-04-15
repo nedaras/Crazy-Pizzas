@@ -20,6 +20,8 @@ import nft15 from '../public/nfts/images/15.png'
 import nft58 from '../public/nfts/images/58.png'
 import NFTCard from '../components/NFTCard'
 import Content, { Field } from '../components/Content'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
 
 const WalletAdapter = dynamic(() => import('../components/WalletAdapter'))
 
@@ -96,10 +98,9 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price, goLiveDa
         setShowWalletAdapter(true)
     }
 
-    console.log(getSecondsLeft(new Date(goLiveDate)))
-
     return (
         <>
+            <Header />
             <Toaster position="bottom-center" reverseOrder={false} />
             <WalletAdapter select={detected.length > 0} show={showWalletAdapter} onClose={() => setShowWalletAdapter(false)} onSelect={handleSelect} />
             <Container className="mw-xl mb-5">
@@ -146,6 +147,7 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price, goLiveDa
                     <NFTCard img={nft58} layers={n58} />
                 </Row>
             </Container>
+            <Footer />
         </>
     )
 }
@@ -159,21 +161,15 @@ function getSecondsLeft(date: Date) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-    const candyMachine = await getData<CandyMachineState>(`http://${req.headers.host}/api/candy-machine/getState`).catch(() => ({
-        itemsRemaining: 0,
-        itemsAvailable: 0,
-        itemsRedeemed: 0,
-        price: 0,
-        goLiveDate: 0
-    }))
+
 
     return {
         props: {
-            remaining: candyMachine.itemsRemaining,
-            available: candyMachine.itemsAvailable,
-            redeemed: candyMachine.itemsRedeemed,
-            price: candyMachine.price,
-            goLiveDate: candyMachine.goLiveDate
+            remaining: 0,
+            available: 0,
+            redeemed: 0,
+            price: 0,
+            goLiveDate: 0
         }
     }
 }
