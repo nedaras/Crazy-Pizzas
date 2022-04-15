@@ -38,7 +38,7 @@ interface Props {
     goLiveDate: number
 }
 
-const Home: NextPage<Props> = ({ remaining, available, redeemed, price, goLiveDate }) => {
+const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
     const [ getWallet, detected ] = useWallet()
     const [ selectedWallet, setSelectedWallet ] = useState<string | null>(detected.length == 1 ? detected[0].name : null)
 
@@ -152,24 +152,22 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price, goLiveDa
     )
 }
 
-// create a function to get how much seconds are left until some date
-function getSecondsLeft(date: Date) {
-    const now = new Date()
-    const seconds = Math.floor((date.getTime() - now.getTime()) / 1000)
-
-    return Math.max(seconds, -1)
-}
-
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-
+    const candyMachine = await getData<CandyMachineState>(`http://${req.headers.host}/api/candy-machine/getState`).catch(() => ({
+        itemsRemaining: 0,
+        itemsAvailable: 0,
+        itemsRedeemed: 0,
+        price: 0,
+        goLiveDate: 0
+    }))
 
     return {
         props: {
-            remaining: 0,
-            available: 0,
-            redeemed: 0,
-            price: 0,
-            goLiveDate: 0
+            remaining: candyMachine.itemsRemaining,
+            available: candyMachine.itemsAvailable,
+            redeemed: candyMachine.itemsRedeemed,
+            price: candyMachine.price,
+            goLiveDate: candyMachine.goLiveDate
         }
     }
 }
