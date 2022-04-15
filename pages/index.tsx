@@ -104,9 +104,12 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
                 <hr className="mb-5" />
                 <Content>
                     <Field title="About The Pizzas">
-                        <li>We all love pizzas so bou them suka nx.</li>
-                        <li>we will do some shit at stifff.</li>
-                        <li>we will do some shit at stifff.</li>
+                        <li>
+                            One pizzas price is <strong>0.8 SOL</strong>.
+                        </li>
+                        <li>
+                            First <strong>222</strong> to mint get Pizza for <strong>Free</strong>.
+                        </li>
                     </Field>
                     <Field title="Notice">
                         <li>

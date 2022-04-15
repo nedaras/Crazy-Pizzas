@@ -1,6 +1,4 @@
-import faTwitter from '@fortawesome/free-brands-svg-icons/faTwitter'
-import faInstagram from '@fortawesome/free-brands-svg-icons/faInstagram'
-import faDiscord from '@fortawesome/free-brands-svg-icons/faDiscord'
+import { faTwitter, faInstagram, faDiscord } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { FC } from 'react'
 import Button from 'react-bootstrap/Button'

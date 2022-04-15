@@ -1,8 +1,6 @@
 import type { FC } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import faTwitter from '@fortawesome/free-brands-svg-icons/faTwitter'
-import faInstagram from '@fortawesome/free-brands-svg-icons/faInstagram'
-import faDiscord from '@fortawesome/free-brands-svg-icons/faDiscord'
+import { faTwitter, faInstagram, faDiscord } from '@fortawesome/free-brands-svg-icons'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import Dropdown from 'react-bootstrap/Dropdown'
 
