@@ -9,7 +9,7 @@ interface CandyMachineState {
     tokenMint: PublicKey
     isSoldOut: boolean
     isActive: boolean
-    goLiveDate: BN
+    goLiveDate: number
     price: BN
     gatekeeper: null | {
         expireOnUse: boolean

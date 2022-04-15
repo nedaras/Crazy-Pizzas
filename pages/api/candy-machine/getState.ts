@@ -17,8 +17,6 @@ export default async function handler(request: NextApiRequest, response: NextApi
         return { error: error.message }
     })
 
-    console.log((candyMachine as CandyMachine).state.goLiveDate.toNumber())
-
     response.status(isResponseAnError(candyMachine) ? 500 : 200).json((candyMachine as CandyMachine).state || candyMachine)
 }
 

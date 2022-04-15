@@ -182,7 +182,7 @@ export const getCandyMachine = async (wallet: Adapter | PublicKey, id: PublicKey
                         ? endSettings.number.toNumber() > time
                         : itemsRedeemed < endSettings.number.toNumber()
                     : true,
-            goLiveDate: data.goLiveDate,
+            goLiveDate: data.goLiveDate.toNumber(),
             treasury: _wallet,
             tokenMint: tokenMint,
             gatekeeper: data.gatekeeper,

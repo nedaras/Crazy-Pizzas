@@ -2,7 +2,7 @@ import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { useEffect, useState } from 'react'
 import { ErrorResponse } from '../@types'
 import { CandyMachineState } from '../@types/candy-machine'
-import { getData, isResponseAnError } from '../libs/fetch-data'
+import { getData } from '../libs/fetch-data'
 
 interface CandyMachine {
     available: number | undefined
@@ -49,3 +49,5 @@ export const useCandyMachine = (): [CandyMachine, () => void] => {
 
     return [ { available, redeemed, remaining, price }, fakeUpdate ]
 }
+
+const isResponseAnError = (response: any): response is ErrorResponse => response.error !== undefined
