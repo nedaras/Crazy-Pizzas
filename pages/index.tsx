@@ -38,7 +38,7 @@ interface Props {
     goLiveDate: number
 }
 
-const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
+const Home: NextPage<Props> = ({ remaining, available, redeemed, price, goLiveDate }) => {
     const [ getWallet, detected ] = useWallet()
     const [ selectedWallet, setSelectedWallet ] = useState<string | null>(detected.length == 1 ? detected[0].name : null)
 
@@ -104,7 +104,7 @@ const Home: NextPage<Props> = ({ remaining, available, redeemed, price }) => {
             <Toaster position="bottom-center" reverseOrder={false} />
             <WalletAdapter select={detected.length > 0} show={showWalletAdapter} onClose={() => setShowWalletAdapter(false)} onSelect={handleSelect} />
             <Container className="mw-xl mb-5">
-                <Mint remaining={remaining} available={available} onClick={mintNFT} price={price} minting={minting} />
+                <Mint goLiveDate={goLiveDate} remaining={remaining} available={available} onClick={mintNFT} price={price} minting={minting} />
                 <hr className="mb-5" />
                 <Content>
                     <Field title="About The Pizzas">
@@ -158,7 +158,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         itemsAvailable: 0,
         itemsRedeemed: 0,
         price: 0,
-        goLiveDate: 0
+        goLiveDate: 0,
     }))
 
     return {
@@ -167,8 +167,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
             available: candyMachine.itemsAvailable,
             redeemed: candyMachine.itemsRedeemed,
             price: candyMachine.price,
-            goLiveDate: candyMachine.goLiveDate
-        }
+            goLiveDate: candyMachine.goLiveDate,
+        },
     }
 }
 
